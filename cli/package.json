@@ -1,0 +1,28 @@
+{
+  "name": "hosty-cli",
+  "version": "1.0.0",
+  "description": "Developer CLI tool for the Hosty Cloud Platform",
+  "bin": {
+    "hosty": "./bin/hosty.js",
+    "mini-vercel": "./bin/hosty.js"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "node ./bin/hosty.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "hosty",
+    "serverless",
+    "deployment",
+    "cli",
+    "aws",
+    "s3",
+    "lambda"
+  ],
+  "author": "Hosty",
+  "license": "MIT"
+}

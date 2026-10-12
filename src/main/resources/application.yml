@@ -1,0 +1,56 @@
+minivercel:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-change-me-at-least-32-bytes-long}
+    expiry: 24h
+  aws:
+    region: ap-south-1
+    table-prefix: mv-
+    # For local dev, point at DynamoDB Local (docker run -p 8000:8000 amazon/dynamodb-local)
+    dynamodb-endpoint: ${DYNAMODB_ENDPOINT:}
+    # S3 bucket name for artifacts (Phase 3 only; leave blank for local mode in Phase 2)
+    artifact-bucket: ${ARTIFACT_BUCKET:mini-vercel-artifacts-364660314424}
+    # CloudFront or S3 website URL where artifacts are publicly served
+    public-base-url: ${PUBLIC_BASE_URL:http://mini-vercel-artifacts-364660314424.s3-website.ap-south-1.amazonaws.com}
+    lambda:
+      # Execution-role ARN for deployed functions (created via `aws iam create-role`).
+      # Override with LAMBDA_ROLE_ARN; set to blank to skip functions and publish only the static site.
+      role-arn: ${LAMBDA_ROLE_ARN:arn:aws:iam::364660314424:role/mini-vercel-lambda-exec}
+      runtime: ${LAMBDA_RUNTIME:nodejs20.x}
+      handler: ${LAMBDA_HANDLER:index.handler}
+      timeout-seconds: 30
+      memory-mb: 256
+      # NONE = public Function URL (Vercel-style). AWS_IAM = require signed requests.
+      url-auth-type: ${LAMBDA_URL_AUTH_TYPE:NONE}
+    domains:
+      # ACM certs served through CloudFront are only honored from us-east-1, regardless of
+      # where the rest of the stack runs — keep this us-east-1 unless you know otherwise.
+      cert-region: ${ACM_CERT_REGION:us-east-1}
+      # CloudFront distribution domain (dxxxx.cloudfront.net) users CNAME their domain at once
+      # the cert is issued. Blank until a CloudFront distribution exists for this account.
+      cloudfront-target: ${CLOUDFRONT_TARGET:}
+      # Optional Route53 hosted-zone id. When set, the ACM DNS-validation CNAME is published
+      # automatically; when blank, the record is returned for the user to add by hand.
+      route53-hosted-zone-id: ${ROUTE53_HOSTED_ZONE_ID:}
+  build:
+    # Where to copy artifacts in local mode (when artifact-bucket is not set)
+    local-artifact-dir: ${BUILD_ARTIFACT_DIR:./artifacts}
+    timeout: 10m
+    max-artifact-bytes: 104857600  # 100 MB
+    allowed-git-hosts:
+      - github.com
+      - gitlab.com
+    allowed-build-commands:
+      - npm run build
+      - npm ci && npm run build
+      - yarn build
+      - pnpm build
+  webhook:
+    # GitHub webhook secret for signature verification
+    github-secret: ${GITHUB_WEBHOOK_SECRET:dev-webhook-secret}
+  limits:
+    # Maximum number of projects per user
+    max-projects-per-user: 10
+    # Maximum number of deployments per project per hour
+    max-deployments-per-hour: 10
+    # Maximum number of active (queued/building) deployments per project
+    max-active-deployments: 3
